@@ -7,5 +7,5 @@
  * Date: Sat Sep  8 00:12:46 CST 2012
  */
 
-#include "parsebasis.h"
-void gtoOutput(const GTO *g, int n);
+#include "common.h"
+void gtoOutput(const GTO *g, const COORD *c, const GTO_PARTIAL *gp, int n);
