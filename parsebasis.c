@@ -27,6 +27,7 @@ inline void Get_Basis_File(char *basisName, char *BasisFile)
         strcat(BasisFile, "sto3g");
 }
 
+/*
 int main(int argc, char **argv)
 {
     if (argc < 2) {
@@ -38,6 +39,7 @@ int main(int argc, char **argv)
 
     return 0;
 }
+*/
 
 #define INITIAL_ATOM_COUNT          100
 #define INITIAL_BASIS_COUNT         100
@@ -110,7 +112,12 @@ INPUT_INFO* parse_input(const char* file_name)
      */
     gCount = inputFile->gCount;
     basisCount = inputFile->basisCount;
+#if DEBUG_INPUT
+    fprintf(stdout, "%d %d %d\n", gCount, inputFile->gtoCount,  basisCount);
 
+    for (i = 0; i < gCount; i++)
+        fprintf(stdout, "%d %lf %lf\n", i, inputFile->gp[i].alpha, inputFile->gp[i].coeff);
+#endif
 
     inputFile->K = (double **)malloc(sizeof(double *) * gCount);
     inputFile->zeta = (double **)malloc(sizeof(double *) * gCount);
@@ -141,7 +148,7 @@ INPUT_INFO* parse_input(const char* file_name)
                                                         inputFile->P[i][j].z);
         }
     }
-    return NULL;
+    return inputFile;
 }
 
 #define DISTANCE(A,B)   pow((A.x-B.x),2)+pow((A.y-B.y),2)+pow((A.z-B.z),2)
@@ -245,8 +252,9 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
                 fscanf(f, "%s", symbol);
                 if (strcmp(symbol, DELIMITER) == 0) {
                 // the current basis block have done.
-                    inputFile->gCount = gCount;
+                    inputFile->gCount = gCount-1;
                     inputFile->gtoCount = gtoCount;
+                    inputFile->basisCount = basisCount;
                     return 0;
                 }
 
