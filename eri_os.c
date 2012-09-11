@@ -156,9 +156,10 @@ double ERI_VRR_OS(int l1, int m1, int n1,
     double item1, item11, item12, item2, item3, item4, item5, result;
     // -----------------------------------the fourth GTO-------------------------------
     if (n4 >= 1) {
+/*
         item1 = QD->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
               + WQ->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-/*
+*/
         if (fabs(QD->z) < COORDINATION_THRESHOLD)
             item11 = 0;
         else
@@ -168,7 +169,6 @@ double ERI_VRR_OS(int l1, int m1, int n1,
             item12 = 0;
         else
             item12 = WQ->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-*/
 
         if (n4 >= 2) {
             item2 = (n4-1) / (2*gamma) * (ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-2, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T)
@@ -192,15 +192,16 @@ double ERI_VRR_OS(int l1, int m1, int n1,
         else
             item5 = 0;
 
-        result = item1 + item2 + item3 + item4 + item5;
-        //result = item11 + item12 + item2 + item3 + item4 + item5;
+        //result = item1 + item2 + item3 + item4 + item5;
+        result = item11 + item12 + item2 + item3 + item4 + item5;
         return result;
     }
 
     if (m4 >= 1) {
+/*
         item1 = QD->y * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-1, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
               + WQ->y * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-1, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-/*
+*/
         if (fabs(QD->y) < COORDINATION_THRESHOLD)
             item11 = 0;
         else
@@ -210,7 +211,6 @@ double ERI_VRR_OS(int l1, int m1, int n1,
             item12 = 0;
         else
             item12 = WQ->y * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-1, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-*/
 
         if (m4 >= 2) {
             item2 = (m4-1) / (2*gamma) * (ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-2, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
@@ -234,15 +234,16 @@ double ERI_VRR_OS(int l1, int m1, int n1,
         else
             item5 = 0;
 
-        result = item1 + item2 + item3 + item4 + item5;
-        //result = item11 + item12 + item2 + item3 + item4 + item5;
+        //result = item1 + item2 + item3 + item4 + item5;
+        result = item11 + item12 + item2 + item3 + item4 + item5;
         return result;
     }
 
     if (l4 >= 1) {
+/*
         item1 = QD->x * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4-1, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
               + WQ->x * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4-1, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-/*
+*/
         if (fabs(QD->x) < COORDINATION_THRESHOLD)
             item11 = 0;
         else
@@ -252,7 +253,6 @@ double ERI_VRR_OS(int l1, int m1, int n1,
             item12 = 0;
         else
             item12 = WQ->x * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4-1, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-*/
 
         if (l4 >= 2) {
             item2 = (l4-1) / (2*gamma) * (ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4-2, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
@@ -276,15 +276,16 @@ double ERI_VRR_OS(int l1, int m1, int n1,
         else
             item5 = 0;
 
-        result = item1 + item2 + item3 + item4 + item5;
-        //result = item11 + item12 + item2 + item3 + item4 + item5;
+        //result = item1 + item2 + item3 + item4 + item5;
+        result = item11 + item12 + item2 + item3 + item4 + item5;
         return result;
     }
     // -----------------------------------the third GTO-------------------------------
     if (n3 >= 1) {
+/*
         item1 = QC->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3-1, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
               + WQ->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3-1, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-/*
+*/
         if (fabs(QC->z) < COORDINATION_THRESHOLD)
             item11 = 0;
         else
@@ -294,7 +295,6 @@ double ERI_VRR_OS(int l1, int m1, int n1,
             item12 = 0;
         else
             item12 = WQ->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3-1, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-*/
 
         if (n3 >= 2) {
             item2 = (n3-1) / (2*gamma) * (ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3-2, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
@@ -318,15 +318,16 @@ double ERI_VRR_OS(int l1, int m1, int n1,
         else
             item5 = 0;
 
-        result = item1 + item2 + item3 + item4 + item5;
-        //result = item11 + item12 + item2 + item3 + item4 + item5;
+        //result = item1 + item2 + item3 + item4 + item5;
+        result = item11 + item12 + item2 + item3 + item4 + item5;
         return result;
     }
 
     if (m3 >= 1) {
+/*
         item1 = QC->y * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3-1, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
               + WQ->y * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3-1, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-/*
+*/
         if (fabs(QC->y) < COORDINATION_THRESHOLD)
             item11 = 0;
         else
@@ -336,7 +337,6 @@ double ERI_VRR_OS(int l1, int m1, int n1,
             item12 = 0;
         else
             item12 = WQ->y * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3-1, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-*/
 
         if (m3 >= 2) {
             item2 = (m3-1) / (2*gamma) * (ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3-2, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
@@ -360,15 +360,16 @@ double ERI_VRR_OS(int l1, int m1, int n1,
         else
             item4 = 0;
 
-        result = item1 + item2 + item3 + item4 + item5;
-        //result = item11 + item12 + item2 + item3 + item4 + item5;
+        //result = item1 + item2 + item3 + item4 + item5;
+        result = item11 + item12 + item2 + item3 + item4 + item5;
         return result;
     }
 
     if (l3 >= 1) {
+/*
         item1 = QC->x * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3-1, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
               + WQ->x * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3-1, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-/*
+*/
         if (fabs(QC->x) < COORDINATION_THRESHOLD)
             item11 = 0;
         else
@@ -378,7 +379,6 @@ double ERI_VRR_OS(int l1, int m1, int n1,
             item12 = 0;
         else
             item12 = WQ->x * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3-1, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-*/
 
         if (l3 >= 2) {
             item2 = (l3-1) / (2*gamma) * (ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3-2, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
@@ -402,25 +402,25 @@ double ERI_VRR_OS(int l1, int m1, int n1,
         else
             item4 = 0;
 
-        result = item1 + item2 + item3 + item4 + item5;
-        //result = item11 + item12 + item2 + item3 + item4 + item5;
+        //result = item1 + item2 + item3 + item4 + item5;
+        result = item11 + item12 + item2 + item3 + item4 + item5;
         return result;
     }
     // ---------------------------------the second basis-------------------------------------
     if (n2 >= 1) {
+/*
         item1 = PB->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2-1, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
               + WP->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2-1, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-/*
+*/
         if (fabs(PB->z) < COORDINATION_THRESHOLD)
             item11 = 0;
         else
-            item12 = PB->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2-1, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T);
+            item11 = PB->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2-1, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T);
 
         if (fabs(WP->z) < COORDINATION_THRESHOLD)
             item12 = 0;
         else
             item12 = WP->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2-1, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-*/
 
         if (n2 >= 2) {
             item2 = (n2-1) / (2*zeta) * (ERI_VRR_OS(l1, m1, n1, l2, m2, n2-2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
@@ -444,15 +444,16 @@ double ERI_VRR_OS(int l1, int m1, int n1,
         else
             item5 = 0;
 
-        result = item1 + item2 + item3 + item4 + item5;
-        //result = item11 + item12 + item2 + item3 + item4 + item5;
+        //result = item1 + item2 + item3 + item4 + item5;
+        result = item11 + item12 + item2 + item3 + item4 + item5;
         return result;
     }
 
     if (m2 >= 1) {
+/*
         item1 = PB->y * ERI_VRR_OS(l1, m1, n1, l2, m2-1, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
               + WP->y * ERI_VRR_OS(l1, m1, n1, l2, m2-1, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-/*
+*/
         if (fabs(PB->y) < COORDINATION_THRESHOLD)
             item11 = 0;
         else
@@ -462,7 +463,6 @@ double ERI_VRR_OS(int l1, int m1, int n1,
             item12 = 0;
         else
             item12 = WP->y * ERI_VRR_OS(l1, m1, n1, l2, m2-1, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-*/
 
         if (m2 >= 2) {
             item2 = (m2-1) / (2*zeta) * (ERI_VRR_OS(l1, m1, n1, l2, m2-2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
@@ -486,15 +486,16 @@ double ERI_VRR_OS(int l1, int m1, int n1,
         else
             item4 = 0;
 
-        result = item1 + item2 + item3 + item4 + item5;
-        //result = item11 + item12 + item2 + item3 + item4 + item5;
+        //result = item1 + item2 + item3 + item4 + item5;
+        result = item11 + item12 + item2 + item3 + item4 + item5;
         return result;
     }
 
     if (l2 >= 1) {
+/*
         item1 = PB->x * ERI_VRR_OS(l1, m1, n1, l2-1, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
               + WP->x * ERI_VRR_OS(l1, m1, n1, l2-1, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-/*
+*/
         if (fabs(PB->x) < COORDINATION_THRESHOLD)
             item11 = 0;
         else
@@ -504,7 +505,6 @@ double ERI_VRR_OS(int l1, int m1, int n1,
             item12 = 0;
         else
             item12 = WP->x * ERI_VRR_OS(l1, m1, n1, l2-1, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-*/
 
         if (l2 >= 2) {
             item2 = (l2-1) / (2*zeta) * (ERI_VRR_OS(l1, m1, n1, l2-2, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
@@ -528,16 +528,17 @@ double ERI_VRR_OS(int l1, int m1, int n1,
         else
             item4 = 0;
 
-        result = item1 + item2 + item3 + item4 + item5;
-        //result = item11 + item12 + item2 + item3 + item4 + item5;
+        //result = item1 + item2 + item3 + item4 + item5;
+        result = item11 + item12 + item2 + item3 + item4 + item5;
         return result;
     }
 
     // the first basis
     if (n1 >= 1) {
+/*
         item1 = PA->z * ERI_VRR_OS(l1, m1, n1-1, l2, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
               + WP->z * ERI_VRR_OS(l1, m1, n1-1, l2, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-/*
+*/
         if (fabs(PA->z) < COORDINATION_THRESHOLD)
             item11 = 0;
         else
@@ -547,7 +548,6 @@ double ERI_VRR_OS(int l1, int m1, int n1,
             item12 = 0;
         else
             item12 = WP->z * ERI_VRR_OS(l1, m1, n1-1, l2, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-*/
 
         if (n1 >= 2) {
             item2 = (n1-1) / (2*zeta) * (ERI_VRR_OS(l1, m1, n1-2, l2, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
@@ -571,15 +571,16 @@ double ERI_VRR_OS(int l1, int m1, int n1,
         else
             item5 = 0;
 
-        result = item1 + item2 + item3 + item4 + item5;
-        //result = item11 + item12 + item2 + item3 + item4 + item5;
+        //result = item1 + item2 + item3 + item4 + item5;
+        result = item11 + item12 + item2 + item3 + item4 + item5;
         return result;
     }
 
     if (m1 >= 1) {
+/*
         item1 = PA->y * ERI_VRR_OS(l1, m1-1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
               + WP->y * ERI_VRR_OS(l1, m1-1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-/*
+*/
         if (fabs(PA->y) < COORDINATION_THRESHOLD)
             item11 = 0;
         else
@@ -589,7 +590,6 @@ double ERI_VRR_OS(int l1, int m1, int n1,
             item12 = 0;
         else
             item12 = WP->y * ERI_VRR_OS(l1, m1-1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-*/
 
         if (m1 >= 2) {
             item2 = (m1-1) / (2*zeta) * (ERI_VRR_OS(l1, m1-2, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
@@ -613,15 +613,16 @@ double ERI_VRR_OS(int l1, int m1, int n1,
         else
             item4 = 0;
 
-        result = item1 + item2 + item3 + item4 + item5;
-        //result = item11 + item12 + item2 + item3 + item4 + item5;
+        //result = item1 + item2 + item3 + item4 + item5;
+        result = item11 + item12 + item2 + item3 + item4 + item5;
         return result;
     }
 
     if (l1 >= 1) {
+/*
         item1 = PA->x * ERI_VRR_OS(l1-1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
               + WP->x * ERI_VRR_OS(l1-1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-/*
+*/        
         if (fabs(PA->x) < COORDINATION_THRESHOLD)
             item11 = 0;
         else
@@ -631,7 +632,6 @@ double ERI_VRR_OS(int l1, int m1, int n1,
             item12 = 0;
         else
             item12 = WP->x * ERI_VRR_OS(l1-1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-*/        
 
         if (l1 >= 2) {
             item2 = (l1-1) / (2*zeta) * (ERI_VRR_OS(l1-2, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
@@ -655,8 +655,8 @@ double ERI_VRR_OS(int l1, int m1, int n1,
         else
             item4 = 0;
 
-        result = item1 + item2 + item3 + item4 + item5;
-        //result = item11 + item12 + item2 + item3 + item4 + item5;
+        //result = item1 + item2 + item3 + item4 + item5;
+        result = item11 + item12 + item2 + item3 + item4 + item5;
         return result;
     }
 
