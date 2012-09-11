@@ -15,31 +15,21 @@
 #include "print.h"
 #include "common.h"
 
+#define DEBUG_INPUT                 0
+#define DEBUG_OUTPUT_ALLBASIS       0
+#define DEBUG_OUTPUT_ALLGTO         0
+
 /*
     FUNCTION:  GET_BASIS_FILE(a, b)
     This code get the file name acoording the basis which user set
  */
 inline void Get_Basis_File(char *basisName, char *BasisFile)
 {
-    if (strcmp(basisName, "6-31g*") == 0)
+    if (strcasecmp(basisName, "6-31g*") == 0)
         strcat(BasisFile, "631gd");
-    else if (strcmp(basisName, "sto-3g") == 0)
+    else if (strcasecmp(basisName, "sto-3g") == 0)
         strcat(BasisFile, "sto3g");
 }
-
-/*
-int main(int argc, char **argv)
-{
-    if (argc < 2) {
-        fprintf(stdout, "USAGE:\n   ./pasrebasis <basisFile>\n");
-        exit(EXIT_FAILURE);
-    }
-
-    parse_input(argv[1]);
-
-    return 0;
-}
-*/
 
 #define INITIAL_ATOM_COUNT          100
 #define INITIAL_BASIS_COUNT         100
@@ -79,6 +69,10 @@ INPUT_INFO* parse_input(const char* file_name)
     // read the atom information include atom Number and coordination
     while (fscanf(f, "%s%d%lf%lf%lf", atomList[i].symbol, &atomList[i].n,
                                 &coord[i].x, &coord[i].y, &coord[i].z) != EOF) {
+        // tranverse ANGS to BOHR
+        coord[i].x *= ANGS_2_BOHR;
+        coord[i].y *= ANGS_2_BOHR;
+        coord[i].z *= ANGS_2_BOHR;
         fprintf(stdout, "%s %s %d %d %s %d %lf %lf %lf\n",
                         method, basisName,
                         inputFile->icharge, inputFile->imult,
@@ -116,7 +110,8 @@ INPUT_INFO* parse_input(const char* file_name)
     fprintf(stdout, "%d %d %d\n", gCount, inputFile->gtoCount,  basisCount);
 
     for (i = 0; i < gCount; i++)
-        fprintf(stdout, "%d %lf %lf\n", i, inputFile->gp[i].alpha, inputFile->gp[i].coeff);
+        fprintf(stdout, "%d %lf %lf\n", i, inputFile->gp[i].alpha,
+                                                        inputFile->gp[i].coeff);
 #endif
 
     inputFile->K = (double **)malloc(sizeof(double *) * gCount);
@@ -140,18 +135,20 @@ INPUT_INFO* parse_input(const char* file_name)
                                                        &inputFile->P[i][j]);
             inputFile->P[j][i] = inputFile->P[i][j];
 
-            fprintf(stdout, "zeta = %lf\tK = %lf\tP: %lf %lf %lf\n",
+/*
+            fprintf(stdout, "i, j: %d %d\nzeta = %lf\tK = %lf\tP: %lf %lf %lf\n",
+                                                        i, j,
                                                         inputFile->zeta[i][j],
                                                         inputFile->K[i][j],
                                                         inputFile->P[i][j].x,
                                                         inputFile->P[i][j].y,
                                                         inputFile->P[i][j].z);
+*/                                                        
         }
     }
     return inputFile;
 }
 
-#define DISTANCE(A,B)   pow((A.x-B.x),2)+pow((A.y-B.y),2)+pow((A.z-B.z),2)
 #define PI_1_25         4.182513398379599
 
 /*
@@ -222,8 +219,12 @@ Li     0
         }
                         rewind(f);
     }
-
+#if DEBUG_OUTPUT_ALLBASIS
+    PrintAllBasis(inputFile);
+#endif
+#if DEBUG_OUTPUT_ALLGTO
     gtoOutput(inputFile->gtoSet, inputFile->gXYZ, inputFile->gp,  inputFile->gtoCount);
+#endif
 }
  
 //int GetBasis(FILE *f, GTO *g, int gtoCount, BASIS *b, int *basisCount)
@@ -252,13 +253,12 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
                 fscanf(f, "%s", symbol);
                 if (strcmp(symbol, DELIMITER) == 0) {
                 // the current basis block have done.
-                    inputFile->gCount = gCount-1;
+                    inputFile->gCount = gCount;
                     inputFile->gtoCount = gtoCount;
                     inputFile->basisCount = basisCount;
                     return 0;
                 }
 
-                strcpy(b[basisCount].type, symbol);
                 fscanf(f, "%d%lf", &b[basisCount].gaussCount,
                                                         &b[basisCount].scale);
                 // Get the orbital (basis function) type and goto next state
@@ -270,6 +270,7 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
             case 1:
             // Read S orbital basis function 
                 b[basisCount].gaussian = &g[gtoCount];
+                b[basisCount].cid = cid;
                 for (i = 0; i < b[basisCount].gaussCount; i++) {
                     fscanf(f, "%lf%lf", &gp[gCount].alpha, &gp[gCount].coeff);
                     gp[gCount].cid = cid;
@@ -278,6 +279,9 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
                     gtoCount++;
                     gCount++;
                 }
+                // Use int type data indicate the orbital Type
+                // strcpy(b[basisCount].type, "S");
+                b[basisCount].Type = 0;
                 basisCount++;
                 state = 0;
                 break;
@@ -290,6 +294,15 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
                 b[basisCount + 2].gaussian = &g[gtoCount + tmp_i * 2];
                 b[basisCount + 3].gaussian = &g[gtoCount + tmp_i * 3];
 
+                b[basisCount].cid =
+                b[basisCount + 1].cid =
+                b[basisCount + 2].cid =
+                b[basisCount + 3].cid = cid;
+
+                b[basisCount + 1].gaussCount = 
+                b[basisCount + 2].gaussCount = 
+                b[basisCount + 3].gaussCount = tmp_i;
+
                 for (i = 0; i < tmp_i; i++) {
                     fscanf(f, "%lf%lf%lf", &gp[gCount].alpha, &gp[gCount].coeff,
                                                     &tmp_coeff);
@@ -299,12 +312,7 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
                     g[gtoCount].coeff = Normalize(&g[gtoCount], &gp[gCount]);
 
                     // P
-                    /*
-                    g[gtoCount + tmp_i].gtoID = 
-                    g[gtoCount + tmp_i * 2].gtoID = 
-                    g[gtoCount + tmp_i * 3].gtoID = (gtoCount) + tmp_i;
-                    */
-                    gp[gCount + tmp_i].alpha = gp[gCount].coeff;
+                    gp[gCount + tmp_i].alpha = gp[gCount].alpha;
                     gp[gCount + tmp_i].coeff = tmp_coeff;
                     gp[gCount + tmp_i].cid = cid;
 
@@ -325,6 +333,17 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
                     gtoCount++;
                     gCount++;
                 }
+
+                // Use int type data indicate the orbital Type
+                //strcpy(b[basisCount].type, "S");
+                //strcpy(b[basisCount + 1].type, "X");
+                //strcpy(b[basisCount + 2].type, "Y");
+                //strcpy(b[basisCount + 3].type, "Z");
+                b[basisCount].Type = 0;
+                b[basisCount + 1].Type = 1;
+                b[basisCount + 2].Type = 2;
+                b[basisCount + 3].Type = 3;
+
                 gtoCount += tmp_i * 3;
                 gCount += tmp_i;
                 basisCount += 4;
@@ -340,6 +359,19 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
                 b[basisCount + 3].gaussian = &g[gtoCount + tmp_i * 3];
                 b[basisCount + 4].gaussian = &g[gtoCount + tmp_i * 4];
                 b[basisCount + 5].gaussian = &g[gtoCount + tmp_i * 5];
+
+                b[basisCount].cid =
+                b[basisCount + 1].cid =
+                b[basisCount + 2].cid =
+                b[basisCount + 3].cid =
+                b[basisCount + 4].cid =
+                b[basisCount + 5].cid = cid;
+
+                b[basisCount + 1].gaussCount =
+                b[basisCount + 2].gaussCount =
+                b[basisCount + 3].gaussCount =
+                b[basisCount + 4].gaussCount =
+                b[basisCount + 5].gaussCount = tmp_i;
 
                 for (i = 0; i < tmp_i; i++) {
                     fscanf(f, "%lf%lf", &gp[gCount].alpha, &gp[gCount].coeff);
@@ -384,6 +416,20 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
                     gtoCount++;
                     gCount++;
                 }
+                // Use int type data indicate the orbital Type
+                //strcpy(b[basisCount].type, "XX");
+                //strcpy(b[basisCount + 1].type, "YY");
+                //strcpy(b[basisCount + 2].type, "ZZ");
+                //strcpy(b[basisCount + 3].type, "XY");
+                //strcpy(b[basisCount + 4].type, "XZ");
+                //strcpy(b[basisCount + 5].type, "YZ");
+                b[basisCount].Type = 4;
+                b[basisCount + 1].Type = 5;
+                b[basisCount + 2].Type = 6;
+                b[basisCount + 3].Type = 7;
+                b[basisCount + 4].Type = 8;
+                b[basisCount + 5].Type = 9;
+
                 gtoCount += tmp_i * 5;
                 gCount += tmp_i;
                 basisCount += 6;
@@ -391,6 +437,28 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
                 break;
             case 4:
             // Read F orbital basis function parameter
+                // Use int type data indicate the orbital Type
+                //strcpy(b[basisCount].type, "XXX");
+                //strcpy(b[basisCount + 1].type, "YYY");
+                //strcpy(b[basisCount + 2].type, "ZZZ");
+                //strcpy(b[basisCount + 3].type, "XXY");
+                //strcpy(b[basisCount + 4].type, "XXZ");
+                //strcpy(b[basisCount + 5].type, "YYX");
+                //strcpy(b[basisCount + 6].type, "YYZ");
+                //strcpy(b[basisCount + 7].type, "ZZX");
+                //strcpy(b[basisCount + 8].type, "ZZY");
+                //strcpy(b[basisCount + 9].type, "XYZ");
+                b[basisCount].Type = 10;
+                b[basisCount + 1].Type = 11;
+                b[basisCount + 2].Type = 12;
+                b[basisCount + 3].Type = 13;
+                b[basisCount + 4].Type = 14;
+                b[basisCount + 5].Type = 15;
+                b[basisCount + 6].Type = 16;
+                b[basisCount + 7].Type = 17;
+                b[basisCount + 8].Type = 18;
+                b[basisCount + 9].Type = 19;
+
                 state = 0;
                 break;
             case 5:
@@ -411,9 +479,6 @@ inline double Normalize(const GTO *g, const GTO_PARTIAL *gp)
     int m = g->m;
     int n = g->n;
 
-    if (l <= 0) l = 1;
-    if (m <= 0) m = 1;
-    if (n <= 0) n = 1;
     return gp->coeff * pow(2*alpha/M_PI, 0.75) * sqrt(pow(4*alpha, l + m + n)/
         (factorial_2(2*l-1) * factorial_2(2*m-1) * factorial_2(2*n-1)));
 }

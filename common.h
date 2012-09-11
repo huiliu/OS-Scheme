@@ -39,7 +39,7 @@ typedef struct gto {
 typedef struct _b {
 // the parameter of basis function
     unsigned short int gaussCount;
-    char type[10];
+    unsigned short Type;
     double  scale;
     GTO* gaussian;   // 3 表示一个基函数由3个gaussian函数构成
     unsigned short cid;     // direct the coordination
@@ -85,6 +85,8 @@ inline int factorial_2(int);
 // check the symtery of two-electron integral
 inline int ChkERISym(double ****e, int i, int j, int k, int l, int N, int *is_dup);
 inline void Gaussian_product_center(const GTO_PARTIAL *gpa, const GTO_PARTIAL *gpb,  const COORD *c, COORD *p);
+
+inline int GetAngularMomentum(int);
 #define MALLOC(p,n) \
     if (!(p = malloc((n)))) { \
         printf("====== alloc memory failed! ======\n");\
@@ -102,5 +104,14 @@ inline void Gaussian_product_center(const GTO_PARTIAL *gpa, const GTO_PARTIAL *g
         printf("====== realloc memory failed! ======\n");\
         exit(EXIT_FAILURE);\
     }
+
+#define DISTANCE(A,B)   pow((A.x-B.x),2)+pow((A.y-B.y),2)+pow((A.z-B.z),2)
+// The Norm of vector.
+#define NORM_2(A)   (A.x*A.x + A.y*A.y + A.z*A.z)
+
+#define MULTISCALE(A,B,a) \
+    A.x = a * B.x; \
+    A.y = a * B.y; \
+    A.z = a * B.z
 
 #endif

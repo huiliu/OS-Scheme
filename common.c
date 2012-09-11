@@ -1,5 +1,7 @@
 #include "common.h"
 #include <math.h>
+#include <string.h>
+#include <stdio.h>
 
 /*
  *  放置一些常用函数
@@ -129,4 +131,20 @@ inline void Gaussian_product_center(const GTO_PARTIAL *gpa, const GTO_PARTIAL *g
     p->x = (alpha1 * c[i].x + alpha2 * c[j].x) / zeta;
     p->y = (alpha1 * c[i].y + alpha2 * c[j].y) / zeta;
     p->z = (alpha1 * c[i].z + alpha2 * c[j].z) / zeta;
+}
+
+inline int GetAngularMomentum(int i)
+{
+    if (i == 0) //  S
+        return 0;
+    else if (i <= 3 && i >= 1)  // P
+        return 1;
+    else if (i <= 9 && i >= 4)  // D
+        return 2;
+    else if (i <= 19 && i >=10) // F
+        return 3;
+    else {
+        fprintf(stderr, "\"%d\" The type of orbital doesn't exsit.\n", i);
+        exit(EXIT_FAILURE);
+    }
 }

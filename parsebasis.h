@@ -12,6 +12,10 @@
 #ifndef __INTEGRAL__BASIS__
 #define __INTEGRAL__BASIS__
 
+// angstrom to bohr radius
+#define ANGS_2_BOHR     1.88971616463
+
+
 #define OPEN_FILE(f,fName)  \
     if((f = fopen(fName, "r")) == NULL) { \
         fprintf(stdout, "Open file \"%s\" failed!\n", fName); \
