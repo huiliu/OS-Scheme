@@ -14,6 +14,8 @@
 
 double fact2[] = {1, 1, 2, 3, 8, 15, 48, 105, 384, 945, 3840, 10395, 46080, 135135, 645120, 2027025, 10321920, 34459425, 185794560, 654729075, 3715891200, 13749310575, 81749606400, 316234143225, 1961990553600};
 
+#define FACTORIAL_2(n)  ((n) <= 0 ? 1 : fact2[n])
+
 #define M_SQRT_PI_2             1.253314137315500121
 #define F_INC_GAMMA_CYCLE       100
 #define F_INC_GAMMA_delta       1.0E-10
@@ -27,23 +29,23 @@ double fact2[] = {1, 1, 2, 3, 8, 15, 48, 105, 384, 945, 3840, 10395, 46080, 1351
  *      F_m(w) = \int_0^1 exp(-wt^2) t^{2m} dt
  *  \end{equation}
  */
-double F_inc_gamma(int m ,double w)
+inline double F_inc_gamma(int m ,double w)
 {
     double result = 0;
     double tmp = 0;
     int i;
     
     if (w < 17) {
-        result = tmp = 1.0 / factorial_2(2*m + 1);
+        result = tmp = 1.0 / FACTORIAL_2(2*m + 1);
         for (i = 1; i < F_INC_GAMMA_CYCLE; i++) {
             tmp *= ((2*w) / (2*m + 2*i + 1));
             if ((tmp - F_INC_GAMMA_delta) < 0)
                 break;
             result += tmp;
         }
-        return result * factorial_2(2 * m -1) * exp(-w);;
+        return result * FACTORIAL_2(2 * m -1) * exp(-w);;
     }else
-        result = factorial_2(2*m -1) / pow(2*w, m + 0.5) * M_SQRT_PI_2;
+        result = FACTORIAL_2(2*m -1) / pow(2*w, m + 0.5) * M_SQRT_PI_2;
     return result;
 }
 
@@ -56,11 +58,13 @@ inline int factorial(int n)
     return result;
 }
 
+
 inline int factorial_2(int n)
 {
     if (n <= 0) return 1;
     return fact2[n];
 }
+
 
 // check the symtery of two-electron integral
 #define GetIndex(i, j, k, l, N) (N * N * N * i + N * N * j + N * k + l)

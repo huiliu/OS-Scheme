@@ -69,18 +69,17 @@ double ERI_basis_OS(const BASIS* b1, const BASIS* b2,
 
                     T = rho * NORM_2(PQ);
 
-                    for (m = 0; m <= L; m++)
-                        F[m] = F_inc_gamma(m, T);
+                    if (T < 17) {
+                        for (m = 0; m <= L; m++)
+                            F[m] = F_inc_gamma(m, T);
+                    }else{
+                        F[L] = F_inc_gamma(L, T);
+                        double expT = exp(-T);
+                        for (m = L - 1; m >= 0; m--)
+                            F[m] = (2*T * F[m+1] + expT) / (2*m+1);
+                    }
 
                     //fprintf(stdout, "%16.9E%16.9E%16.9E%16.9E%16.9E\n", rho, PQ.x, PQ.y, PQ.z, T);
-
-                    /*
-                    F[L] = F_inc_gamma(L, T);
-                    double expT = exp(-T);
-                    for (m = L - 1; m >= 0; m--)
-                        F[m] = (2*T * F[m+1] - expT) / (2*m+1);
-                    */
-
 
                     KAB = inp->K[gid1][gid2];
                     KCD = inp->K[gid3][gid4];

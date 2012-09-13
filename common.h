@@ -79,7 +79,7 @@ typedef struct FILE_INPUT_ {
  * -----------------------------------------------------------------------
  */
 
-double F_inc_gamma(int m ,double w);
+inline double F_inc_gamma(int m ,double w);
 inline int factorial(int);
 inline int factorial_2(int);
 // check the symtery of two-electron integral
