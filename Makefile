@@ -1,6 +1,6 @@
 cc = icc
-#OPT = -g -pg -Wall -lm -o
-OPT = -O3 -fast -lm -o
+OPT = -g -pg -Wall -lm -o
+#OPT = -O3 -fast -lm -o
 #OPT = -O3 -pg -lm -o
 
 all:  int
@@ -24,4 +24,4 @@ int: int.c print.o common.o parsebasis.o eri_drive.o eri_os.o
 	$(cc) int.c print.o common.o parsebasis.o eri_drive.o eri_os.o $(OPT) int
 
 clean:
-	rm -rf int *.o
+	rm -rf int *.o gmon.out
