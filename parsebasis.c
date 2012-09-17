@@ -18,6 +18,12 @@
 #define DEBUG_INPUT                 0
 #define DEBUG_OUTPUT_ALLBASIS       0
 #define DEBUG_OUTPUT_ALLGTO         0
+#define DEBUG_ZETA_K_P              0
+
+#define INITIAL_ATOM_COUNT          100
+#define INITIAL_BASIS_COUNT         200
+#define INDEPENDENT_GTO_COUNT       300
+#define PI_1_25         4.182513398379599
 
 /*
     FUNCTION:  GET_BASIS_FILE(a, b)
@@ -29,11 +35,11 @@ inline void Get_Basis_File(char *basisName, char *BasisFile)
         strcat(BasisFile, "631gd");
     else if (strcasecmp(basisName, "sto-3g") == 0)
         strcat(BasisFile, "sto3g");
+    else if (strcasecmp(basisName, "acct") == 0)
+        strcat(BasisFile, "acct");
+    else if (strcasecmp(basisName, "cct") == 0)
+        strcat(BasisFile, "cct");
 }
-
-#define INITIAL_ATOM_COUNT          100
-#define INITIAL_BASIS_COUNT         100
-#define INDEPENDENT_GTO_COUNT       300
 
 INPUT_INFO* parse_input(const char* file_name)
 {
@@ -125,17 +131,20 @@ INPUT_INFO* parse_input(const char* file_name)
 
     for (i = 0; i < gCount; i++) {
         for (j = 0; j <= i; j++) {
+            // compute \zeta = \alpha_1 + \alpha_2
             inputFile->zeta[i][j] = inputFile->zeta[j][i] = 
                         inputFile->gp[i].alpha + inputFile->gp[j].alpha;
+            // compute K = f(\alpha_1, \alpha_2, AB)
             inputFile->K[i][j] = inputFile->K[j][i] = K_OS(&inputFile->gp[i], 
                                                            &inputFile->gp[j],
                                                            inputFile->gXYZ);
+            // compute P
             Gaussian_product_center(&inputFile->gp[i], &inputFile->gp[j],
                                                        inputFile->gXYZ,
                                                        &inputFile->P[i][j]);
             inputFile->P[j][i] = inputFile->P[i][j];
 
-/*
+#if DEBUG_ZETA_K_P
             fprintf(stdout, "i, j: %d %d\nzeta = %lf\tK = %lf\tP: %lf %lf %lf\n",
                                                         i, j,
                                                         inputFile->zeta[i][j],
@@ -143,16 +152,15 @@ INPUT_INFO* parse_input(const char* file_name)
                                                         inputFile->P[i][j].x,
                                                         inputFile->P[i][j].y,
                                                         inputFile->P[i][j].z);
-*/                                                        
+#endif
         }
     }
     return inputFile;
 }
 
-#define PI_1_25         4.182513398379599
-
 /*
  *  Function:   K_OS
+ *
  *  The program compute the value of formula (47) in J. Chem. Phys. 84(7),3963
  *
  *  %Latex formula
@@ -163,7 +171,7 @@ INPUT_INFO* parse_input(const char* file_name)
  *        \mathbf{AB}^2 \right)
  *  \end{equation}
  */
-inline double K_OS(const GTO_PARTIAL *gp1, const GTO_PARTIAL *gp2, const COORD *c)
+inline double K_OS(const GTO_PARTIAL *gp1,const GTO_PARTIAL *gp2,const COORD *c)
 {
     int i = gp1->cid;
     int j = gp2->cid;
@@ -172,15 +180,21 @@ inline double K_OS(const GTO_PARTIAL *gp1, const GTO_PARTIAL *gp2, const COORD *
 
     return M_SQRT2 * PI_1_25 / zeta * exp(-gp1->alpha * gp2->alpha / zeta * AB);
 }
-    
+
+/*
+ *  Function:   readbasis
+ *
+ *  The program scan the basis data file for searching the basis information.
+ */
 #define LINE_LEN            80
 #define DELIMITER           "****"
 #define DELIMITER_LEN       4
-#define ORBITAL_TYPE_COUNT  6
+#define ORBITAL_TYPE_COUNT  7
 
 void readbasis(FILE * f, INPUT_INFO *inputFile)
 {
-/*
+/* 
+ *  The structure of basis data file (EMSL gaussian 94)
 ****
 H     0 
 S   3   1.00                           
@@ -226,8 +240,14 @@ Li     0
     gtoOutput(inputFile->gtoSet, inputFile->gXYZ, inputFile->gp,  inputFile->gtoCount);
 #endif
 }
- 
-//int GetBasis(FILE *f, GTO *g, int gtoCount, BASIS *b, int *basisCount)
+
+/*
+ *  Function:   GetBasis
+ *
+ *  The program read basis function parameter from the basis data file
+ *  which come from EMSL.
+ *
+ */
 int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
 {
 /*
@@ -237,7 +257,7 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
  *      0.16885540             0.44463454
  */
     char symbol[5];
-    char orbitalType[ORBITAL_TYPE_COUNT][3] = {"S", "SP", "D", "F", "G", "H"};
+    char orbitalType[ORBITAL_TYPE_COUNT][3] = {"S", "P", "SP", "D", "F", "G", "H"};
     int state = 0, tmp_i = 0, i;
     double tmp_coeff = 0;
     GTO_PARTIAL *gp = inputFile->gp;
@@ -286,6 +306,51 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
                 state = 0;
                 break;
             case 2:
+            // Read P orbital basis function parameter
+                tmp_i = b[basisCount].gaussCount;
+                b[basisCount].gaussian = &g[gtoCount];
+                b[basisCount + 1].gaussian = &g[gtoCount + tmp_i];
+                b[basisCount + 2].gaussian = &g[gtoCount + tmp_i * 2];
+
+                b[basisCount].cid =
+                b[basisCount + 1].cid =
+                b[basisCount + 2].cid = cid;
+
+                b[basisCount + 1].gaussCount = 
+                b[basisCount + 2].gaussCount = tmp_i;
+
+                for (i = 0; i < tmp_i; i++) {
+                    fscanf(f, "%lf%lf", &gp[gCount].alpha, &gp[gCount].coeff);
+                    gp[gCount].cid = cid;
+
+                    g[gtoCount].gid =
+                    g[gtoCount + tmp_i].gid =
+                    g[gtoCount + tmp_i * 2].gid = gCount;
+
+                    g[gtoCount].l =
+                    g[gtoCount + tmp_i].m = 
+                    g[gtoCount + tmp_i * 2].n = 1;
+
+                    g[gtoCount].coeff =
+                    g[gtoCount + tmp_i].coeff = 
+                    g[gtoCount + tmp_i * 2].coeff = Normalize(&g[gtoCount],
+                                                              &gp[gCount]);
+
+                    gtoCount++;
+                    gCount++;
+                }
+
+                b[basisCount].Type = 1;
+                b[basisCount + 1].Type = 2;
+                b[basisCount + 2].Type = 3;
+
+                gtoCount += tmp_i * 2;
+                //gCount += tmp_i;
+                basisCount += 3;
+
+                state = 0;
+                break;
+            case 3:
             // Read SP orbital basis function parameter
                 tmp_i = b[basisCount].gaussCount;
 
@@ -334,11 +399,6 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
                     gCount++;
                 }
 
-                // Use int type data indicate the orbital Type
-                //strcpy(b[basisCount].type, "S");
-                //strcpy(b[basisCount + 1].type, "X");
-                //strcpy(b[basisCount + 2].type, "Y");
-                //strcpy(b[basisCount + 3].type, "Z");
                 b[basisCount].Type = 0;
                 b[basisCount + 1].Type = 1;
                 b[basisCount + 2].Type = 2;
@@ -349,7 +409,7 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
                 basisCount += 4;
                 state = 0;
                 break;
-            case 3:
+            case 4:
             // Read D orbital basis function parameter
                 tmp_i = b[basisCount].gaussCount;
 
@@ -416,13 +476,7 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
                     gtoCount++;
                     gCount++;
                 }
-                // Use int type data indicate the orbital Type
-                //strcpy(b[basisCount].type, "XX");
-                //strcpy(b[basisCount + 1].type, "YY");
-                //strcpy(b[basisCount + 2].type, "ZZ");
-                //strcpy(b[basisCount + 3].type, "XY");
-                //strcpy(b[basisCount + 4].type, "XZ");
-                //strcpy(b[basisCount + 5].type, "YZ");
+
                 b[basisCount].Type = 4;
                 b[basisCount + 1].Type = 5;
                 b[basisCount + 2].Type = 6;
@@ -431,24 +485,109 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
                 b[basisCount + 5].Type = 9;
 
                 gtoCount += tmp_i * 5;
-                gCount += tmp_i;
+                //gCount += tmp_i;
                 basisCount += 6;
                 state = 0;
                 break;
-            case 4:
+            case 5:
             // Read F orbital basis function parameter
-                // Use int type data indicate the orbital Type
-                //strcpy(b[basisCount].type, "XXX");
-                //strcpy(b[basisCount + 1].type, "YYY");
-                //strcpy(b[basisCount + 2].type, "ZZZ");
-                //strcpy(b[basisCount + 3].type, "XXY");
-                //strcpy(b[basisCount + 4].type, "XXZ");
-                //strcpy(b[basisCount + 5].type, "YYX");
-                //strcpy(b[basisCount + 6].type, "YYZ");
-                //strcpy(b[basisCount + 7].type, "ZZX");
-                //strcpy(b[basisCount + 8].type, "ZZY");
-                //strcpy(b[basisCount + 9].type, "XYZ");
-                b[basisCount].Type = 10;
+            // Use int type data indicate the orbital Type
+                tmp_i = b[basisCount].gaussCount;
+
+                b[basisCount].gaussian = &g[gtoCount];
+                b[basisCount + 1].gaussian = &g[gtoCount + tmp_i];
+                b[basisCount + 2].gaussian = &g[gtoCount + tmp_i * 2];
+                b[basisCount + 3].gaussian = &g[gtoCount + tmp_i * 3];
+                b[basisCount + 4].gaussian = &g[gtoCount + tmp_i * 4];
+                b[basisCount + 5].gaussian = &g[gtoCount + tmp_i * 5];
+                b[basisCount + 6].gaussian = &g[gtoCount + tmp_i * 6];
+                b[basisCount + 7].gaussian = &g[gtoCount + tmp_i * 7];
+                b[basisCount + 8].gaussian = &g[gtoCount + tmp_i * 8];
+                b[basisCount + 9].gaussian = &g[gtoCount + tmp_i * 9];
+
+                b[basisCount].cid =
+                b[basisCount + 1].cid =
+                b[basisCount + 2].cid =
+                b[basisCount + 3].cid =
+                b[basisCount + 4].cid =
+                b[basisCount + 5].cid =
+                b[basisCount + 6].cid =
+                b[basisCount + 7].cid =
+                b[basisCount + 8].cid =
+                b[basisCount + 9].cid = cid;
+
+                b[basisCount + 1].gaussCount =
+                b[basisCount + 2].gaussCount =
+                b[basisCount + 3].gaussCount =
+                b[basisCount + 4].gaussCount =
+                b[basisCount + 5].gaussCount =
+                b[basisCount + 6].gaussCount =
+                b[basisCount + 7].gaussCount =
+                b[basisCount + 8].gaussCount =
+                b[basisCount + 9].gaussCount = tmp_i;
+
+                for (i = 0; i < tmp_i; i++) {
+                    fscanf(f, "%lf%lf", &gp[gCount].alpha, &gp[gCount].coeff);
+
+                    gp[gCount].cid =cid;
+
+                    g[gtoCount].gid =
+                    g[gtoCount + tmp_i].gid =
+                    g[gtoCount + tmp_i * 2].gid =
+                    g[gtoCount + tmp_i * 3].gid =
+                    g[gtoCount + tmp_i * 4].gid =
+                    g[gtoCount + tmp_i * 5].gid =
+                    g[gtoCount + tmp_i * 6].gid =
+                    g[gtoCount + tmp_i * 7].gid =
+                    g[gtoCount + tmp_i * 8].gid =
+                    g[gtoCount + tmp_i * 9].gid = gCount;
+
+                    // f_{x^3} f_{y^3} f_{z^3}
+                    g[gtoCount].l =
+                    g[gtoCount + tmp_i].m = 
+                    g[gtoCount + tmp_i * 2].n = 3;
+                    // f_{x^2y}
+                    g[gtoCount + tmp_i * 3].l = 2;
+                    g[gtoCount + tmp_i * 3].m = 1;
+                    //  f_{x^2z}
+                    g[gtoCount + tmp_i * 4].l = 2;
+                    g[gtoCount + tmp_i * 4].n = 1;
+                    // f_{xy^2}
+                    g[gtoCount + tmp_i * 5].l = 1;
+                    g[gtoCount + tmp_i * 5].m = 2;
+                    //  f_{y^2z}
+                    g[gtoCount + tmp_i * 6].m = 2;
+                    g[gtoCount + tmp_i * 6].n = 1;
+                    // f_{xz^2}
+                    g[gtoCount + tmp_i * 7].l = 1;
+                    g[gtoCount + tmp_i * 7].n = 2;
+                    //  f_{yz^2}
+                    g[gtoCount + tmp_i * 8].m = 1;
+                    g[gtoCount + tmp_i * 8].n = 2;
+                    // f_{xyz}
+                    g[gtoCount + tmp_i * 9].l = 1;
+                    g[gtoCount + tmp_i * 9].m = 1;
+                    g[gtoCount + tmp_i * 9].n = 1;
+
+                    g[gtoCount].coeff =
+                    g[gtoCount + tmp_i].coeff =
+                    g[gtoCount + tmp_i * 2].coeff =
+                                           Normalize(&g[gtoCount], &gp[gCount]);
+                    g[gtoCount + tmp_i * 3].coeff =
+                    g[gtoCount + tmp_i * 4].coeff =
+                    g[gtoCount + tmp_i * 5].coeff =
+                    g[gtoCount + tmp_i * 6].coeff =
+                    g[gtoCount + tmp_i * 7].coeff =
+                    g[gtoCount + tmp_i * 8].coeff =
+                               Normalize(&g[gtoCount + tmp_i * 4], &gp[gCount]);
+                    g[gtoCount + tmp_i * 9].coeff =
+                               Normalize(&g[gtoCount + tmp_i * 9], &gp[gCount]);
+
+                    gtoCount++;
+                    gCount++;
+                }
+
+                b[basisCount].Type     = 10;
                 b[basisCount + 1].Type = 11;
                 b[basisCount + 2].Type = 12;
                 b[basisCount + 3].Type = 13;
@@ -459,9 +598,13 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
                 b[basisCount + 8].Type = 18;
                 b[basisCount + 9].Type = 19;
 
+                gtoCount += tmp_i * 9;
+                //gCount += tmp_i;
+                basisCount += 10;
+
                 state = 0;
                 break;
-            case 5:
+            case 6:
             // Read G orbital basis function parameter
                 state = 0;
                 break;
@@ -472,6 +615,17 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
     }
 }
 
+/*
+ *  Function:   Normalize
+ *
+ *  The program compute the normalization of the GTO.
+ *
+ *  Parameter:
+ *  
+ *      const GTO *g        contain the angular momentum(l, m, n).
+ *      const GTO_PARTIAL *gp       contain the exponent and the contract
+ *                                  coefficient
+ */
 inline double Normalize(const GTO *g, const GTO_PARTIAL *gp)
 {
     double alpha = gp->alpha;
