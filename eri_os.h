@@ -21,5 +21,13 @@ double ERI_VRR_OS(int l1, int m1, int n1,
                   const COORD *PA, const COORD *PB, const COORD *QC,
                   const COORD *QD, const COORD *WQ, const COORD *WP,
                   int m, double*);
+double ERI_VRR_OS_C(int l1, int m1, int n1,
+                  int l2, int m2, int n2,
+                  int l3, int m3, int n3,
+                  int l4, int m4, int n4,
+                  double zeta, double gamma, double ro,
+                  const COORD *PA, const COORD *PB, const COORD *QC,
+                  const COORD *QD, const COORD *WQ, const COORD *WP,
+                  int m, double*);
 
 #endif

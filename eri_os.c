@@ -125,13 +125,13 @@ fprintf(stdout, "===== ===== =====\n%15.9E %15.9E %15.9E %15.9E\n",
                     fprintf(stdout, "----- ----- -----\n%15.9E %15.9E\n", zeta, eta);
 */
 
-                    result += pre * KAB * KCD * ERI_VRR_OS(g1->l, g1->m ,g1->n,
+                    result += pre * KAB * KCD * ERI_VRR_OS_C(g1->l, g1->m ,g1->n,
                                                        g2->l, g2->m ,g2->n,
                                                        g3->l, g3->m ,g3->n,
                                                        g4->l, g4->m ,g4->n,
                                                        zeta, eta, rho,
                                                        &PA, &PB, &QC, &QD, &WQ, &WP,
-                                                       0, F)/sqrt(zeta + eta);
+                                                       L, F)/sqrt(zeta + eta);
                 }
             }
         }
@@ -660,4 +660,364 @@ double ERI_VRR_OS(int l1, int m1, int n1,
     }
 
     return T[m];
+}
+/*
+ *  Function:   ERI_VRR_OS_C
+ *  
+ *  The program use loop replace the iterate and eliminate the duplicated computation
+ *  , but the time of computation increased after all.
+ */
+
+#define MAXSHELL        3
+#define MAX_M           12
+double ERI_VRR_OS_C(int l1, int m1, int n1,
+                  int l2, int m2, int n2,
+                  int l3, int m3, int n3,
+                  int l4, int m4, int n4,
+                  double zeta, double eta, double ro,
+                  const COORD *PA, const COORD *PB, const COORD *QC,
+                  const COORD *QD, const COORD *WQ, const COORD *WP,
+                  int M, double *T)
+{
+    double items[MAXSHELL][MAXSHELL][MAXSHELL][MAXSHELL][MAXSHELL][MAXSHELL][MAXSHELL][MAXSHELL][MAXSHELL][MAXSHELL][MAXSHELL][MAXSHELL][MAX_M];
+    register int i, j, k, l, m, n, u, v, w, r, s, t, im;
+
+    for (i = 0; i <= M; i++)
+        items[0][0][0][0][0][0][0][0][0][0][0][0][i] = T[i];
+
+    for (i = 0; i < l4; i++) {
+    for (im = 0; im < M - i; im++) {
+        items[i+1][0][0][0][0][0][0][0][0][0][0][0][im] =
+            QD->x * items[i][0][0][0][0][0][0][0][0][0][0][0][im]
+          + WQ->x * items[i][0][0][0][0][0][0][0][0][0][0][0][im+1];
+        if (i > 0)
+            items[i+1][0][0][0][0][0][0][0][0][0][0][0][im] +=
+                i/2.0/eta * (items[i-1][0][0][0][0][0][0][0][0][0][0][0][im]
+                  - ro/eta * items[i-1][0][0][0][0][0][0][0][0][0][0][0][im+1]);
+    }
+    }
+    for (j = 0; j < m4; j++) {
+        for (i = 0; i < l4 + 1; i++) {
+    for (im = 0; im < M - i - j; im++) {
+        items[i][j+1][0][0][0][0][0][0][0][0][0][0][im] = 
+            QD->y * items[i][j][0][0][0][0][0][0][0][0][0][0][im]
+          + WQ->y * items[i][j][0][0][0][0][0][0][0][0][0][0][im+1];
+        if (j > 0)
+            items[i][j+1][0][0][0][0][0][0][0][0][0][0][im] +=
+                j/2.0/eta * (items[i][j-1][0][0][0][0][0][0][0][0][0][0][im]
+                  - ro/eta * items[i][j-1][0][0][0][0][0][0][0][0][0][0][im+1]);
+    }
+        }
+    }
+    for (k = 0; k < n4; k++) {
+        for (j = 0 ; j < m4+1; j++) {
+            for (i = 0; i < l4+1; i++) {
+    for (im = 0; im < M-i-j-k; im++) {
+        items[i][j][k+1][0][0][0][0][0][0][0][0][0][im] = 
+            QD->z * items[i][j][k][0][0][0][0][0][0][0][0][0][im]
+          + WQ->z * items[i][j][k][0][0][0][0][0][0][0][0][0][im+1];
+        if (k > 0)
+            items[i][j][k+1][0][0][0][0][0][0][0][0][0][im] +=
+                k/2.0/eta * (items[i][j][k-1][0][0][0][0][0][0][0][0][0][im]
+                - ro/eta * items[i][j][k-1][0][0][0][0][0][0][0][0][0][im+1]);
+
+    }
+            }
+        }
+    }
+    for (l = 0; l < l3; l++) {
+    for (k = 0; k < n4+1; k++) {
+        for (j = 0 ; j < m4+1; j++) {
+            for (i = 0; i < l4+1; i++) {
+    for (im = 0; im < M-i-j-k-l; im++) {
+        items[i][j][k][l+1][0][0][0][0][0][0][0][0][im] = 
+                QC->x * items[i][j][k][l][0][0][0][0][0][0][0][0][im]
+              + WQ->x * items[i][j][k][l][0][0][0][0][0][0][0][0][im+1];
+        if (l > 0)
+            items[i][j][k][l+1][0][0][0][0][0][0][0][0][im] +=
+                l/2.0/eta * (items[i][j][k][l-1][0][0][0][0][0][0][0][0][im]
+                  - ro/eta * items[i][j][k][l-1][0][0][0][0][0][0][0][0][im+1]);
+        if (i > 0)
+            items[i][j][k][l+1][0][0][0][0][0][0][0][0][im] +=
+            i/2.0/eta * (items[i-1][j][k][l][0][0][0][0][0][0][0][0][im]
+              - ro/eta * items[i-1][j][k][l][0][0][0][0][0][0][0][0][im+1]);
+    }
+            }
+        }
+    }
+    }
+    for (m = 0; m < m3; m++) {
+        for (l = 0; l < l3+1; l++) {
+    for (k = 0; k < n4+1; k++) {
+        for (j = 0 ; j < m4+1; j++) {
+            for (i = 0; i < l4+1; i++) {
+    for (im = 0; im < M-i-j-k-l-m; im++) {
+        items[i][j][k][l][m+1][0][0][0][0][0][0][0][im] = 
+                QC->y * items[i][j][k][l][m][0][0][0][0][0][0][0][im]
+              + WQ->y * items[i][j][k][l][m][0][0][0][0][0][0][0][im+1];
+        if (m > 0)
+            items[i][j][k][l][m+1][0][0][0][0][0][0][0][im] +=
+                m/2.0/eta * (items[i][j][k][l][m-1][0][0][0][0][0][0][0][im]
+                  - ro/eta * items[i][j][k][l][m-1][0][0][0][0][0][0][0][im+1]);
+        if (j > 0)
+            items[i][j][k][l][m+1][0][0][0][0][0][0][0][im] +=
+            j/2.0/eta * (items[i][j-1][k][l][m][0][0][0][0][0][0][0][im]
+              - ro/eta * items[i][j-1][k][l][m][0][0][0][0][0][0][0][im+1]);
+    }
+            }
+        }
+    }
+        }
+    }
+    for (n = 0; n < n3; n++) {
+        for (m = 0; m < m3+1; m++) {
+            for (l = 0; l < l3+1; l++) {
+    for (k = 0; k < n4+1; k++) {
+        for (j = 0 ; j < m4+1; j++) {
+            for (i = 0; i < l4+1; i++) {
+    for (im = 0; im < M-i-j-k-l-m-n; im++) {
+        items[i][j][k][l][m][n+1][0][0][0][0][0][0][im] = 
+                QC->z * items[i][j][k][l][m][n][0][0][0][0][0][0][im]
+              + WQ->z * items[i][j][k][l][m][n][0][0][0][0][0][0][im+1];
+        if (n > 0)
+            items[i][j][k][l][m][n+1][0][0][0][0][0][0][im] +=
+                n/2.0/eta * (items[i][j][k][l][m][n-1][0][0][0][0][0][0][im]
+                  - ro/eta * items[i][j][k][l][m][n-1][0][0][0][0][0][0][im+1]);
+        if (k > 0)
+            items[i][j][k][l][m][n+1][0][0][0][0][0][0][im] +=
+            k/2.0/eta * (items[i][j][k-1][l][m][n][0][0][0][0][0][0][im]
+              - ro/eta * items[i][j][k-1][l][m][n][0][0][0][0][0][0][im+1]);
+    }
+            }
+        }
+    }
+            }
+        }
+    }
+    // ------------------------------------------------------------------------
+    // [ab|
+    //
+    for (u = 0; u < l2; u++) {
+    for (n = 0; n < n3+1; n++) {
+        for (m = 0; m < m3+1; m++) {
+            for (l = 0; l < l3+1; l++) {
+    for (k = 0; k < n4+1; k++) {
+        for (j = 0 ; j < m4+1; j++) {
+            for (i = 0; i < l4+1; i++) {
+    for (im = 0; im < M-i-j-k-l-m-n-u; im++) {
+        items[i][j][k][l][m][n][u+1][0][0][0][0][0][im] = 
+                PB->x * items[i][j][k][l][m][n][u][0][0][0][0][0][im]
+              + WP->x * items[i][j][k][l][m][n][u][0][0][0][0][0][im+1];
+        if (u > 0)
+            items[i][j][k][l][m][n][u+1][0][0][0][0][0][im] +=
+                u/2.0/zeta * (items[i][j][k][l][m][n][u-1][0][0][0][0][0][im]
+                  - ro/zeta * items[i][j][k][l][m][n][u-1][0][0][0][0][0][im+1]);
+        // \frac{c_i}{2(\zeta+\eta}[0(b-1_i),(c-1_i)d]^{m+1}
+        if (i > 0)
+            items[i][j][k][l][m][n][u+1][0][0][0][0][0][im] +=
+            i/2.0/(zeta+eta) * items[i-1][j][k][l][m][n][u][0][0][0][0][0][im+1];
+        // \frac{d_i}{2(\zeta+\eta}[0(b-1_i),c(d-1_i)]^{m+1}
+        if (l > 0)
+            items[i][j][k][l][m][n][u+1][0][0][0][0][0][im] +=
+            l/2.0/(zeta+eta) * items[i][j][k][l-1][m][n][u][0][0][0][0][0][im+1];
+            
+    }
+            }
+        }
+    }
+            }
+        }
+    }
+    }
+    for (v = 0; v < m2; v++) {
+        for (u = 0; u < l2+1; u++) {
+    for (n = 0; n < n3+1; n++) {
+        for (m = 0; m < m3+1; m++) {
+            for (l = 0; l < l3+1; l++) {
+    for (k = 0; k < n4+1; k++) {
+        for (j = 0 ; j < m4+1; j++) {
+            for (i = 0; i < l4+1; i++) {
+    for (im = 0; im < M-i-j-k-l-m-n-u-v; im++) {
+        items[i][j][k][l][m][n][u][v+1][0][0][0][0][im] = 
+                PB->y * items[i][j][k][l][m][n][u][v][0][0][0][0][im]
+              + WP->y * items[i][j][k][l][m][n][u][v][0][0][0][0][im+1];
+        if (v > 0)
+            items[i][j][k][l][m][n][u][v+1][0][0][0][0][im] +=
+                v/2.0/zeta * (items[i][j][k][l][m][n][u][v-1][0][0][0][0][im]
+                  - ro/zeta * items[i][j][k][l][m][n][u][v-1][0][0][0][0][im+1]);
+        if (j > 0)
+            items[i][j][k][l][m][n][u][v+1][0][0][0][0][im] +=
+            j/2.0/(zeta+eta) * items[i][j-1][k][l][m][n][u][v][0][0][0][0][im+1];
+        if (m > 0)
+            items[i][j][k][l][m][n][u][v+1][0][0][0][0][im] +=
+            m/2.0/(zeta+eta) * items[i][j][k][l][m-1][n][u][v][0][0][0][0][im+1];
+    }
+            }
+        }
+    }
+            }
+        }
+    }
+        }
+    }
+    for (w = 0; w < n2; w++) {
+        for (v = 0; v < m2+1; v++) {
+            for (u = 0; u < l2+1; u++) {
+    for (n = 0; n < n3+1; n++) {
+        for (m = 0; m < m3+1; m++) {
+            for (l = 0; l < l3+1; l++) {
+    for (k = 0; k < n4+1; k++) {
+        for (j = 0 ; j < m4+1; j++) {
+            for (i = 0; i < l4+1; i++) {
+    for (im = 0; im < M-i-j-k-l-m-n-u-v-w; im++) {
+        items[i][j][k][l][m][n][u][v][w+1][0][0][0][im] = 
+                PB->z * items[i][j][k][l][m][n][u][v][w][0][0][0][im]
+              + WP->z * items[i][j][k][l][m][n][u][v][w][0][0][0][im+1];
+        if (w > 0)
+            items[i][j][k][l][m][n][u][v][w+1][0][0][0][im] +=
+                i/2.0/zeta * (items[i][j][k][l][m][n][u][v][w-1][0][0][0][im]
+                  - ro/zeta * items[i][j][k][l][m][n][u][v][w-1][0][0][0][im+1]);
+        if (k > 0)
+            items[i][j][k][l][m][n][u][v][w+1][0][0][0][im] +=
+            k/2.0/(zeta+eta) * items[i][j][k-1][l][m][n][u][v][w][0][0][0][im+1];
+        if (n > 0)
+            items[i][j][k][l][m][n][u][v][w+1][0][0][0][im] +=
+            n/2.0/(zeta+eta) * items[i][j][k][l][m][n-1][u][v][w][0][0][0][im+1];
+    }
+            }
+        }
+    }
+            }
+        }
+    }
+            }
+        }
+    }
+    for (r = 0; r < l1; r++) {
+    for (w = 0; w < n2+1; w++) {
+        for (v = 0; v < m2+1; v++) {
+            for (u = 0; u < l2+1; u++) {
+    for (n = 0; n < n3+1; n++) {
+        for (m = 0; m < m3+1; m++) {
+            for (l = 0; l < l3+1; l++) {
+    for (k = 0; k < n4+1; k++) {
+        for (j = 0 ; j < m4+1; j++) {
+            for (i = 0; i < l4+1; i++) {
+    for (im = 0; im < M-i-j-k-l-m-n-u-v-w-r; im++) {
+        items[i][j][k][l][m][n][u][v][w][r+1][0][0][im] = 
+                PA->x * items[i][j][k][l][m][n][u][v][w][r][0][0][im]
+              + WP->x * items[i][j][k][l][m][n][u][v][w][r][0][0][im+1];
+        if (r > 0)
+            items[i][j][k][l][m][n][u][v][w][r+1][0][0][im] +=
+                r/2.0/zeta * (items[i][j][k][l][m][n][u][v][w][r-1][0][0][im]
+                  - ro/zeta * items[i][j][k][l][m][n][u][v][w][r-1][0][0][im+1]);
+        if (u > 0)
+            items[i][j][k][l][m][n][u][v][w][r+1][0][0][im] +=
+                u/2.0/zeta * (items[i][j][k][l][m][n][u-1][v][w][r][0][0][im]
+                  - ro/zeta * items[i][j][k][l][m][n][u-1][v][w][r][0][0][im+1]);
+        // \frac{c_i}{2(\zeta+\eta}[0(b-1_i),(c-1_i)d]^{m+1}
+        if (i > 0)
+            items[i][j][k][l][m][n][u][v][w][r+1][0][0][im] = 
+            i/2.0/(zeta+eta) * items[i-1][j][k][l][m][n][u][v][w][r][0][0][im+1];
+        // \frac{d_i}{2(\zeta+\eta}[0(b-1_i),c(d-1_i)]^{m+1}
+        if (l > 0)
+            items[i][j][k][l][m][n][u][v][w][r+1][0][0][im] = 
+            l/2.0/(zeta+eta) * items[i][j][k][l-1][m][n][u][v][w][r][0][0][im+1];
+    }
+            }
+        }
+    }
+            }
+        }
+    }
+            }
+        }
+    }
+    }
+    for (s = 0; s < m1; s++) {
+        for (r = 0; r < l1+1; r++) {
+    for (w = 0; w < n2+1; w++) {
+        for (v = 0; v < m2+1; v++) {
+            for (u = 0; u < l2+1; u++) {
+    for (n = 0; n < n3+1; n++) {
+        for (m = 0; m < m3+1; m++) {
+            for (l = 0; l < l3+1; l++) {
+    for (k = 0; k < n4+1; k++) {
+        for (j = 0 ; j < m4+1; j++) {
+            for (i = 0; i < l4+1; i++) {
+    for (im = 0; im < M-i-j-k-l-m-n-u-v-w-r-s; im++) {
+        items[i][j][k][l][m][n][u][v][w][r][s+1][0][im] = 
+                PA->x * items[i][j][k][l][m][n][u][v][w][r][s][0][im]
+              + WP->x * items[i][j][k][l][m][n][u][v][w][r][s][0][im+1];
+        if (s > 0)
+            items[i][j][k][l][m][n][u][v][w][r][s+1][0][im] +=
+                s/2.0/zeta * (items[i][j][k][l][m][n][u][v][w][r][s-1][0][im]
+                  - ro/zeta * items[i][j][k][l][m][n][u][v][w][r][s-1][0][im+1]);
+        if (v > 0)
+            items[i][j][k][l][m][n][u][v][w][r][s+1][0][im] +=
+                v/2.0/zeta * (items[i][j][k][l][m][n][u][v-1][w][r][s][0][im]
+                  - ro/zeta * items[i][j][k][l][m][n][u][v-1][w][r][s][0][im+1]);
+        if (m > 0)
+            items[i][j][k][l][m][n][u][v][w][r][s+1][0][im] +=
+            m/2.0/(zeta+eta) * items[i][j][k][l][m-1][n][u][v][w][r][s][0][im+1];
+        if (j > 0)
+            items[i][j][k][l][m][n][u][v][w][r][s+1][0][im] +=
+            j/2.0/(zeta+eta) * items[i][j-1][k][l][m][n][u][v][w][r][s][0][im+1];
+    }
+            }
+        }
+    }
+            }
+        }
+    }
+            }
+        }
+    }
+        }
+    }
+    for (t = 0; t < n1; t++) {
+        for (s = 0; s < m1+1; s++) {
+            for (r = 0; r < l1+1; r++) {
+    for (w = 0; w < n2+1; w++) {
+        for (v = 0; v < m2+1; v++) {
+            for (u = 0; u < l2+1; u++) {
+    for (n = 0; n < n3+1; n++) {
+        for (m = 0; m < m3+1; m++) {
+            for (l = 0; l < l3+1; l++) {
+    for (k = 0; k < n4+1; k++) {
+        for (j = 0 ; j < m4+1; j++) {
+            for (i = 0; i < l4+1; i++) {
+    for (im = 0; im < M-i-j-k-l-m-n-u-v-w-r-s-t; im++) {
+        items[i][j][k][l][m][n][u][v][w][r][s][t+1][im] = 
+                PA->x * items[i][j][k][l][m][n][u][v][w][r][s][t][im]
+              + WP->x * items[i][j][k][l][m][n][u][v][w][r][s][t][im+1];
+        if (t > 0)
+            items[i][j][k][l][m][n][u][v][w][r][s][t+1][im] +=
+                t/2.0/zeta * (items[i][j][k][l][m][n][u][v][w][r][s][t-1][im]
+                  - ro/zeta * items[i][j][k][l][m][n][u][v][w][r][s][t-1][im+1]);
+        if (w > 0)
+            items[i][j][k][l][m][n][u][v][w][r][s][t+1][im] +=
+                t/2.0/zeta * (items[i][j][k][l][m][n][u][v][w-1][r][s][t][im]
+                  - ro/zeta * items[i][j][k][l][m][n][u][v][w-1][r][s][t][im+1]);
+        if (n > 0)
+            items[i][j][k][l][m][n][u][v][w][r][s][t+1][im] +=
+            n/2.0/(zeta+eta) * items[i][j][k][l][m][n-1][u][v][w][r][s][t][im+1];
+        if (k > 0)
+            items[i][j][k][l][m][n][u][v][w][r][s][t+1][im] +=
+            k/2.0/(zeta+eta) * items[i][j][k-1][l][m][n][u][v][w][r][s][t][im+1];
+            
+    }
+            }
+        }
+    }
+            }
+        }
+    }
+            }
+        }
+    }
+            }
+        }
+    }
+    return items[l4][m4][n4][l3][m3][n3][l2][m2][n2][l1][m1][n1][0];
 }
