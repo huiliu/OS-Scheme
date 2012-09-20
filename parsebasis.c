@@ -92,7 +92,7 @@ INPUT_INFO* parse_input(const char* file_name)
     fclose(f);
 
     // release redundant memory
-    REALLOC(inputFile->atomList, inputFile->atomCount);
+    REALLOC(inputFile->atomList, inputFile->atomCount * sizeof(ATOM_INFO));
 
     // ----------------------------------------------------------------
     // Read Basis information from the basis function database
@@ -237,7 +237,8 @@ Li     0
     PrintAllBasis(inputFile);
 #endif
 #if DEBUG_OUTPUT_ALLGTO
-    gtoOutput(inputFile->gtoSet, inputFile->gXYZ, inputFile->gp,  inputFile->gtoCount);
+    gtoOutput(inputFile->gtoSet, inputFile->gXYZ, inputFile->gp,
+                                                  inputFile->gtoCount);
 #endif
 }
 
@@ -257,7 +258,8 @@ int GetBasis(FILE *f, INPUT_INFO *inputFile, int cid)
  *      0.16885540             0.44463454
  */
     char symbol[5];
-    char orbitalType[ORBITAL_TYPE_COUNT][3] = {"S", "P", "SP", "D", "F", "G", "H"};
+    char orbitalType[ORBITAL_TYPE_COUNT][3] =
+                                        {"S", "P", "SP", "D", "F", "G", "H"};
     int state = 0, tmp_i = 0, i;
     double tmp_coeff = 0;
     GTO_PARTIAL *gp = inputFile->gp;
