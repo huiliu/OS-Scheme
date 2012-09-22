@@ -35,29 +35,31 @@ double ERI_basis_OS(const BASIS* b1, const BASIS* b2,
 
     for (i = 0; i < gaussCount_1; i++) {
         for (j = 0; j < gaussCount_2; j++) {
+            g1 = &b1->gaussian[i];
+            g2 = &b2->gaussian[j];
+            gid1 = g1->gid;
+            gid2 = g2->gid;
+            cid1 = inp->gp[gid1].cid;
+            cid2 = inp->gp[gid2].cid;
+
+            zeta = inp->zeta[gid1][gid2];
+
+            PP(inp->P[gid1][gid2], inp->gXYZ[cid1], PA);
+            PP(inp->P[gid1][gid2], inp->gXYZ[cid2], PB);
+
+            KAB = inp->K[gid1][gid2];
+
             for (k = 0; k < gaussCount_3; k++) {
                 for (l = 0; l < gaussCount_4; l++) {
-
-                    g1 = &b1->gaussian[i];
-                    g2 = &b2->gaussian[j];
                     g3 = &b3->gaussian[k];
                     g4 = &b4->gaussian[l];
-
-                    gid1 = g1->gid;
-                    gid2 = g2->gid;
                     gid3 = g3->gid;
                     gid4 = g4->gid;
-
-                    cid1 = inp->gp[gid1].cid;
-                    cid2 = inp->gp[gid2].cid;
                     cid3 = inp->gp[gid3].cid;
                     cid4 = inp->gp[gid4].cid;
 
-                    zeta = inp->zeta[gid1][gid2];
                     eta = inp->zeta[gid3][gid4];
 
-                    PP(inp->P[gid1][gid2], inp->gXYZ[cid1], PA);
-                    PP(inp->P[gid1][gid2], inp->gXYZ[cid2], PB);
                     PP(inp->P[gid3][gid4], inp->gXYZ[cid3], QC);
                     PP(inp->P[gid3][gid4], inp->gXYZ[cid4], QD);
                     PP(inp->P[gid1][gid2], inp->P[gid3][gid4], PQ);
@@ -81,7 +83,6 @@ double ERI_basis_OS(const BASIS* b1, const BASIS* b2,
 
                     //fprintf(stdout, "%16.9E%16.9E%16.9E%16.9E%16.9E\n", rho, PQ.x, PQ.y, PQ.z, T);
 
-                    KAB = inp->K[gid1][gid2];
                     KCD = inp->K[gid3][gid4];
 
                     pre = g1->coeff * g2->coeff * g3->coeff * g4->coeff;
@@ -125,13 +126,13 @@ fprintf(stdout, "===== ===== =====\n%15.9E %15.9E %15.9E %15.9E\n",
                     fprintf(stdout, "----- ----- -----\n%15.9E %15.9E\n", zeta, eta);
 */
 
-                    result += pre * KAB * KCD * ERI_VRR_OS_C(g1->l, g1->m ,g1->n,
+                    result += pre * KAB * KCD * ERI_VRR_OS(g1->l, g1->m ,g1->n,
                                                        g2->l, g2->m ,g2->n,
                                                        g3->l, g3->m ,g3->n,
                                                        g4->l, g4->m ,g4->n,
                                                        zeta, eta, rho,
                                                        &PA, &PB, &QC, &QD, &WQ, &WP,
-                                                       L, F)/sqrt(zeta + eta);
+                                                       0, F)/sqrt(zeta + eta);
                 }
             }
         }
@@ -141,6 +142,8 @@ fprintf(stdout, "===== ===== =====\n%15.9E %15.9E %15.9E %15.9E\n",
         fprintf(stdout, "result: %15.8lf\n", result);
     return result;
 }
+
+#define FABS(x)     ((x) > 0 ? (x) : -(x))
 
 #define COORDINATION_THRESHOLD          1.0E-12
 double ERI_VRR_OS(int l1, int m1, int n1,

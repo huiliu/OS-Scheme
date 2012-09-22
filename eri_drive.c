@@ -3,6 +3,7 @@
 #include <math.h>
 #include "eri_drive.h"
 #include "eri_os.h"
+#include "eri_hgp.h"
 
 
 #define DEBUG_ERI_BASIS_NO      0
@@ -43,8 +44,10 @@ double**** ERI_Matrix(INPUT_INFO* b)
             for (k = 0; k < basis_count; k++) {
                 for (l = 0; l < basis_count; l++) {
                     //debug = 0;
-                    //if (i == 0 && j == 2 && k == 0 && l == 2)
-                    //if (i == 2 && j == 0 && k == 0 && l == 2)
+                    //if (i == 0 && j == 0 && k == 0 && l == 5) {
+                    //    debug = 91;
+                    //    fprintf(stdout, "---%d---%d---%d---%d---\n", i, j, k, l);
+                    //}
 
                     ChkERISym(e2, i, j, k, l, basis_count, &is_dup);
                     if (is_dup)     continue;
@@ -58,11 +61,12 @@ double**** ERI_Matrix(INPUT_INFO* b)
                     e2[k][l][i][j] = \
                     e2[k][l][j][i] = \
                     e2[l][k][i][j] = \
-                    e2[l][k][j][i] = ERI_basis_OS(&basisSet[i], 
-                                                 &basisSet[j], 
-                                                 &basisSet[k], 
-                                                 &basisSet[l], 
-                                                 b, debug);
+                    e2[l][k][j][i] = ERI_basis_OS(
+                                                &basisSet[i],
+                                                &basisSet[j],
+                                                &basisSet[k],
+                                                &basisSet[l], b, debug);
+                    //e2[i][j][k][l] = ERI_HGP_DRIVE(b, i, j, k, l, debug);
                 }
             }
         }

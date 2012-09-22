@@ -116,4 +116,9 @@ inline int GetAngularMomentum(int);
     A.y = a * B.y; \
     A.z = a * B.z
 
+#define PP(A,B,P)   \
+    P.x = A.x - B.x; \
+    P.y = A.y - B.y; \
+    P.z = A.z - B.z;
+
 #endif

@@ -6,11 +6,6 @@
 
 //#define K_OS(a, b, AB_2) M_SQRT2 * pow(M_PI, 1.25) / (a + b) * exp(-a*b/(a+b) * AB_2)
 
-#define PP(A,B,P)   \
-    P.x = A.x - B.x; \
-    P.y = A.y - B.y; \
-    P.z = A.z - B.z;
-
 double ERI_basis_OS(const BASIS* b1, const BASIS* b2,
                     const BASIS* b3, const BASIS* b4, const INPUT_INFO *inp, int debug);
 double ERI_VRR_OS(int l1, int m1, int n1,
