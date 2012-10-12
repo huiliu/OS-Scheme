@@ -33,6 +33,8 @@ inline void Get_Basis_File(char *basisName, char *BasisFile)
 {
     if (strcasecmp(basisName, "6-31g*") == 0)
         strcat(BasisFile, "631gd");
+    else if (strcasecmp(basisName, "6-31g") == 0)
+        strcat(BasisFile, "631g");
     else if (strcasecmp(basisName, "sto-3g") == 0)
         strcat(BasisFile, "sto3g");
     else if (strcasecmp(basisName, "acct") == 0)

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "eri_hgp.h"
+#include "eri_os.h"
 
 
 double ERI_HGP_DRIVE(const INPUT_INFO *inp, int ii, int jj, int kk, int ll, int debug)
@@ -13,17 +14,40 @@ double ERI_HGP_DRIVE(const INPUT_INFO *inp, int ii, int jj, int kk, int ll, int 
     double *XSXS = NULL;
     double result;
     COORD AB, CD;
-    BASIS b1, b2, b3, b4;
+    BASIS b1, b2, b3, b4, tmp;
+    int temp;
 
     b1 = inp->basisSet[ii];
     b2 = inp->basisSet[jj];
     b3 = inp->basisSet[kk];
     b4 = inp->basisSet[ll];
 
+    if ((b1.gaussian[0].l + b1.gaussian[0].m + b1.gaussian[0].n) < 
+        (b2.gaussian[0].l +  b2.gaussian[0].m + b2.gaussian[0].n)) {
+        tmp = b1;
+        b1 = b2;
+        b2 = tmp;
+
+        temp = ii;
+        ii = jj;
+        jj = temp;
+    }
+
+    if ((b3.gaussian[0].l + b3.gaussian[0].m + b3.gaussian[0].n) < 
+        (b4.gaussian[0].l +  b4.gaussian[0].m + b4.gaussian[0].n)) {
+        tmp = b3;
+        b3 = b4;
+        b4 = tmp;
+
+        temp = kk;
+        kk = ll;
+        ll = temp;
+    }
+
     PP(inp->gXYZ[b1.cid], inp->gXYZ[b2.cid], AB);
     PP(inp->gXYZ[b3.cid], inp->gXYZ[b4.cid], CD);
 
-if (debug == 9) {
+if (debug == 90) {
     fprintf(stdout, "AB:\t%12.6E%12.6E%12.6E\n", AB.x, AB.y, AB.z);
     fprintf(stdout, "CD:\t%12.6E%12.6E%12.6E\n", CD.x, CD.y, CD.z);
 }
@@ -133,7 +157,7 @@ double HGPBasis(const INPUT_INFO *inp,
     gaussCount_3 = b3->gaussCount;
     gaussCount_4 = b4->gaussCount;
 
-if (debug == 9) {
+if (debug == 91) {
     fprintf(stdout, "l1 ~ n3:%3d%3d%3d%3d%3d%3d\n", l1, m1, n1, l3, m3, n3);
     PrintBasis(b1, inp->gp, inp->gXYZ);
     PrintBasis(b2, inp->gp, inp->gXYZ);
@@ -197,7 +221,9 @@ if (debug == 9) {
                     KCD = inp->K[gid3][gid4];
 
                     pre = g1->coeff * g2->coeff * g3->coeff * g4->coeff;
-/*
+if (debug == 91) {
+    // fprintf(stdout, "AB:\t%12.6E%12.6E%12.6E\n", AB.x, AB.y, AB.z);
+    // fprintf(stdout, "CD:\t%12.6E%12.6E%12.6E\n", CD.x, CD.y, CD.z);
                     fprintf(stdout, "----- ----- ----- -----\n \
                                      %d %d %d\n \
                                      %d %d %d\n \
@@ -229,25 +255,32 @@ if (debug == 9) {
                                     WQ.x, WQ.y, WQ.z,
                                     WP.x, WP.y, WP.z,
                                     T);
-*/                                    
-/* PASS */
-/*
 fprintf(stdout, "===== ===== =====\n%15.9E %15.9E %15.9E %15.9E\n",
                     inp->gp[gid1].alpha, inp->gp[gid2].alpha,
                     inp->gp[gid3].alpha, inp->gp[gid4].alpha);
                     fprintf(stdout, "----- ----- -----\n%15.9E %15.9E\n", zeta, eta);
-*/
+}
 
-                    result += pre * KAB * KCD * HGPHrrVRR(l1, m1, n1, l3, m3, n3,
+
+                    // result += pre * KAB * KCD * HGPHrrVRR(l1, m1, n1, l3, m3, n3,
+                    //                                    zeta, eta, rho,
+                    //                                    &PA, &PB, &QC, &QD, &WQ, &WP,
+                    //                                    0, F)/sqrt(zeta + eta);
+                    result += pre * KAB * KCD * ERI_VRR_OS(l1, m1, n1,
+                                                       0, 0, 0,
+                                                       l3, m3, n3,
+                                                       0, 0, 0,
                                                        zeta, eta, rho,
                                                        &PA, &PB, &QC, &QD, &WQ, &WP,
                                                        0, F)/sqrt(zeta + eta);
+if (debug == 91)
+    fprintf(stdout, "<<< %lf >>>\n", result);
                 }
             }
         }
     }
     free(F);
-    if (debug == 999)
+    if (debug == 91)
         fprintf(stdout, "result: %15.8lf\n", result);
     return result;
 }

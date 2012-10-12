@@ -22,12 +22,13 @@ double ERI_basis_OS(const BASIS* b1, const BASIS* b2,
     gaussCount_2 = b2->gaussCount;
     gaussCount_3 = b3->gaussCount;
     gaussCount_4 = b4->gaussCount;
-/*
+
+if (debug == 91) {
     PrintBasis(b1, inp->gp, inp->gXYZ);
     PrintBasis(b2, inp->gp, inp->gXYZ);
     PrintBasis(b3, inp->gp, inp->gXYZ);
     PrintBasis(b4, inp->gp, inp->gXYZ);
-*/
+}
 
     L = GetAngularMomentum(b1->Type) + GetAngularMomentum(b2->Type) + GetAngularMomentum(b3->Type) + GetAngularMomentum(b4->Type);
 
@@ -86,7 +87,9 @@ double ERI_basis_OS(const BASIS* b1, const BASIS* b2,
                     KCD = inp->K[gid3][gid4];
 
                     pre = g1->coeff * g2->coeff * g3->coeff * g4->coeff;
-/*
+if (debug == 91) {
+//    fprintf(stdout, "AB:\t%12.6E%12.6E%12.6E\n", AB.x, AB.y, AB.z);
+//    fprintf(stdout, "CD:\t%12.6E%12.6E%12.6E\n", CD.x, CD.y, CD.z);
                     fprintf(stdout, "----- ----- ----- -----\n \
                                      %d %d %d\n \
                                      %d %d %d\n \
@@ -118,13 +121,11 @@ double ERI_basis_OS(const BASIS* b1, const BASIS* b2,
                                     WQ.x, WQ.y, WQ.z,
                                     WP.x, WP.y, WP.z,
                                     T);
-*/                                    
-/* PASS
 fprintf(stdout, "===== ===== =====\n%15.9E %15.9E %15.9E %15.9E\n",
                     inp->gp[gid1].alpha, inp->gp[gid2].alpha,
                     inp->gp[gid3].alpha, inp->gp[gid4].alpha);
                     fprintf(stdout, "----- ----- -----\n%15.9E %15.9E\n", zeta, eta);
-*/
+}
 
                     result += pre * KAB * KCD * ERI_VRR_OS(g1->l, g1->m ,g1->n,
                                                        g2->l, g2->m ,g2->n,
@@ -133,97 +134,99 @@ fprintf(stdout, "===== ===== =====\n%15.9E %15.9E %15.9E %15.9E\n",
                                                        zeta, eta, rho,
                                                        &PA, &PB, &QC, &QD, &WQ, &WP,
                                                        0, F)/sqrt(zeta + eta);
+if (debug == 91)
+    fprintf(stdout, "<<< %lf >>>\n", result);
                 }
             }
         }
     }
+if (debug == 91)
+    fprintf(stdout, "result: %15.8lf\n", result);
     free(F);
-    if (debug == 999)
-        fprintf(stdout, "result: %15.8lf\n", result);
-    return result;
+return result;
 }
 
 #define FABS(x)     ((x) > 0 ? (x) : -(x))
 
 #define COORDINATION_THRESHOLD          1.0E-12
 double ERI_VRR_OS(int l1, int m1, int n1,
-                  int l2, int m2, int n2,
-                  int l3, int m3, int n3,
-                  int l4, int m4, int n4,
-                  double zeta, double gamma, double ro,
-                  const COORD *PA, const COORD *PB, const COORD *QC,
-                  const COORD *QD, const COORD *WQ, const COORD *WP,
-                  int m, double *T)
+              int l2, int m2, int n2,
+              int l3, int m3, int n3,
+              int l4, int m4, int n4,
+              double zeta, double gamma, double ro,
+              const COORD *PA, const COORD *PB, const COORD *QC,
+              const COORD *QD, const COORD *WQ, const COORD *WP,
+              int m, double *T)
 {
-    double item1, item11, item12, item2, item3, item4, item5, result;
-    // -----------------------------------the fourth GTO-------------------------------
-    if (n4 >= 1) {
+double item1, item11, item12, item2, item3, item4, item5, result;
+// -----------------------------------the fourth GTO-------------------------------
+if (n4 >= 1) {
 /*
-        item1 = QD->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
-              + WQ->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
+    item1 = QD->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
+          + WQ->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
 */
-        if (fabs(QD->z) < COORDINATION_THRESHOLD)
-            item11 = 0;
-        else
-            item11 = QD->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T);
+    if (fabs(QD->z) < COORDINATION_THRESHOLD)
+        item11 = 0;
+    else
+        item11 = QD->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T);
 
-        if (fabs(WQ->z) < COORDINATION_THRESHOLD)
-            item12 = 0;
-        else
-            item12 = WQ->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
+    if (fabs(WQ->z) < COORDINATION_THRESHOLD)
+        item12 = 0;
+    else
+        item12 = WQ->z * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
 
-        if (n4 >= 2) {
-            item2 = (n4-1) / (2*gamma) * (ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-2, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T)
-                       - ro / gamma * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-2, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T));
-        }else
-            item2 = 0;
+    if (n4 >= 2) {
+        item2 = (n4-1) / (2*gamma) * (ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-2, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T)
+                   - ro / gamma * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4, n4-2, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T));
+    }else
+        item2 = 0;
 
-        if (n3 >=1)
-            item3 = n3 / (2*gamma) * (ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3-1, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T)
-                       - ro / gamma * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3-1, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T));
-        else
-            item3 = 0;
+    if (n3 >=1)
+        item3 = n3 / (2*gamma) * (ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3-1, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T)
+                   - ro / gamma * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3-1, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T));
+    else
+        item3 = 0;
 
-        if (n2 >= 1)
-            item4 = n2 / (2*(zeta + gamma)) * ERI_VRR_OS(l1, m1, n1, l2, m2, n2-1, l3, m3, n3, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-        else
-            item4 = 0;
+    if (n2 >= 1)
+        item4 = n2 / (2*(zeta + gamma)) * ERI_VRR_OS(l1, m1, n1, l2, m2, n2-1, l3, m3, n3, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
+    else
+        item4 = 0;
 
-        if (n1 >= 1)
-            item5 = n1 / (2*(zeta + gamma)) * ERI_VRR_OS(l1, m1, n1-1, l2, m2, n2, l3, m3, n3, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
-        else
-            item5 = 0;
+    if (n1 >= 1)
+        item5 = n1 / (2*(zeta + gamma)) * ERI_VRR_OS(l1, m1, n1-1, l2, m2, n2, l3, m3, n3, l4, m4, n4-1, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
+    else
+        item5 = 0;
 
-        //result = item1 + item2 + item3 + item4 + item5;
-        result = item11 + item12 + item2 + item3 + item4 + item5;
-        return result;
-    }
+    //result = item1 + item2 + item3 + item4 + item5;
+    result = item11 + item12 + item2 + item3 + item4 + item5;
+    return result;
+}
 
-    if (m4 >= 1) {
+if (m4 >= 1) {
 /*
-        item1 = QD->y * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-1, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
-              + WQ->y * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-1, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
+    item1 = QD->y * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-1, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
+          + WQ->y * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-1, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
 */
-        if (fabs(QD->y) < COORDINATION_THRESHOLD)
-            item11 = 0;
-        else
-            item11 = QD->y * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-1, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T);
+    if (fabs(QD->y) < COORDINATION_THRESHOLD)
+        item11 = 0;
+    else
+        item11 = QD->y * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-1, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T);
 
-        if (fabs(WQ->y) < COORDINATION_THRESHOLD)
-            item12 = 0;
-        else
-            item12 = WQ->y * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-1, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
+    if (fabs(WQ->y) < COORDINATION_THRESHOLD)
+        item12 = 0;
+    else
+        item12 = WQ->y * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-1, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T);
 
-        if (m4 >= 2) {
-            item2 = (m4-1) / (2*gamma) * (ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-2, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
-                       - ro / gamma * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-2, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T));
-        }else
-            item2 = 0;
+    if (m4 >= 2) {
+        item2 = (m4-1) / (2*gamma) * (ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-2, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
+                   - ro / gamma * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3, n3, l4, m4-2, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T));
+    }else
+        item2 = 0;
 
-        if (m3 >=1)
-            item3 = m3 / (2*gamma) * (ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3-1, n3, l4, m4-1, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
-                       - ro / gamma * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3-1, n3, l4, m4-1, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T));
-        else
+    if (m3 >=1)
+        item3 = m3 / (2*gamma) * (ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3-1, n3, l4, m4-1, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m, T) \
+                   - ro / gamma * ERI_VRR_OS(l1, m1, n1, l2, m2, n2, l3, m3-1, n3, l4, m4-1, n4, zeta, gamma, ro, PA, PB, QC, QD, WQ, WP, m+1, T));
+    else
             item3 = 0;
 
         if (m2 >= 1)

@@ -38,11 +38,11 @@ typedef struct gto {
 
 typedef struct _b {
 // the parameter of basis function
-    unsigned short int gaussCount;
+    unsigned short int gaussCount;  // the number of primitive function
     unsigned short Type;
     double  scale;
-    GTO* gaussian;   // 3 表示一个基函数由3个gaussian函数构成
-    unsigned short cid;     // direct the coordination
+    GTO* gaussian;
+    unsigned short cid;             // direct the coordination
 }BASIS;
 
 typedef struct atom_INFORMATON_ {
