@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <math.h>
 #include "print.h"
 #include "common.h"
@@ -9,6 +10,7 @@
 int main(int argc, char** argv)
 {
     char *inp = NULL;
+    clock_t start, finish;
     int n;
 
     if (argc < 2)
@@ -34,7 +36,10 @@ int main(int argc, char** argv)
     matrix_output(h, n, "Hamiltonian Matirx:");
 */
     double ****int2e;
+    start = clock();
     int2e = ERI_Matrix(b);
+    finish = clock();
+    fprintf(stderr, "ERI CPU Time: %f\n", (double)(finish - start) / CLOCKS_PER_SEC);
     int2e_output(int2e, n, "TWO ELECTRON INTEGRAL:");
 
     return 0;
