@@ -15,6 +15,7 @@
 #include "print.h"
 #include "common.h"
 
+#define DEBUG_OUTPUT_INPUTFILE      1
 #define DEBUG_INPUT                 0
 #define DEBUG_OUTPUT_ALLBASIS       0
 #define DEBUG_OUTPUT_ALLGTO         0
@@ -27,7 +28,9 @@
 
 /*
     FUNCTION:  GET_BASIS_FILE(a, b)
-    This code get the file name acoording the basis which user set
+
+    This code get the name of the Basis Function Database
+    acoording the basis which user set
  */
 inline void Get_Basis_File(char *basisName, char *BasisFile)
 {
@@ -35,6 +38,8 @@ inline void Get_Basis_File(char *basisName, char *BasisFile)
         strcat(BasisFile, "631gd");
     else if (strcasecmp(basisName, "6-31g") == 0)
         strcat(BasisFile, "631g");
+    else if (strcasecmp(basisName, "6-31g**") == 0)
+        strcat(BasisFile, "631gdp");
     else if (strcasecmp(basisName, "sto-3g") == 0)
         strcat(BasisFile, "sto3g");
     else if (strcasecmp(basisName, "acct") == 0)
@@ -49,8 +54,8 @@ INPUT_INFO* parse_input(const char* file_name)
   hf 6-31g*
 
   0 1
-  N    7.0        0.0000000000   0.0000000000   0.0000000000
-  N    7.0        0.0000000000   0.0000000000   1.0980000000
+  N    7        0.0000000000   0.0000000000   0.0000000000
+  N    7        0.0000000000   0.0000000000   1.0980000000
 */
     int i = 0, j;
     FILE *f;
@@ -72,7 +77,13 @@ INPUT_INFO* parse_input(const char* file_name)
 
     // read the control parameter like Gaussian 09
     fscanf(f, "%s%s", method, basisName);
+    // Get the electronic count and multidegree of the system
     fscanf(f, "%d%u", &inputFile->icharge, &inputFile->imult);
+
+#if DEBUG_OUTPUT_INPUTFILE
+    fprintf(stdout, "%s %s\n\n%d %u\n",
+                    method, basisName, inputFile->icharge, inputFile->imult);
+#endif
 
     // read the atom information include atom Number and coordination
     while (fscanf(f, "%s%d%lf%lf%lf", atomList[i].symbol, &atomList[i].n,
@@ -81,11 +92,14 @@ INPUT_INFO* parse_input(const char* file_name)
         coord[i].x *= ANGS_2_BOHR;
         coord[i].y *= ANGS_2_BOHR;
         coord[i].z *= ANGS_2_BOHR;
-        fprintf(stdout, "%s %s %d %d %s %d %lf %lf %lf\n",
-                        method, basisName,
-                        inputFile->icharge, inputFile->imult,
-                        atomList[i].symbol, atomList[i].n,
-                        coord[i].x, coord[i].y, coord[i].z);
+#if DEBUG_OUTPUT_INPUTFILE
+        fprintf(stdout, "%s %d %lf %lf %lf\n",
+                        atomList[i].symbol,
+                        atomList[i].n,
+                        coord[i].x,
+                        coord[i].y,
+                        coord[i].z);
+#endif
         // connect the coordination
         inputFile->atomList[i].cid = i;
         inputFile->atomCount++;
