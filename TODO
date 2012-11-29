@@ -1,0 +1,7 @@
+Problem:
+    1. If the basis couldn't be accessed by some atom,
+       Program MUST give an attention to user.
+       For example:
+        H hasn't 6-31G(d)
+    2. 计算ethane时，双电子积分值与Gaussian03计算的有点差别
+        需要检查确认
